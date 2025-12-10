@@ -3,7 +3,7 @@ package org.example.demo_ssr_v1.home;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller
+//@Controller
 public class HomeController {
 
     @GetMapping("/")
