@@ -1,0 +1,27 @@
+{{! 부분 템플릿 문법 }}
+    {{> layout/header}}
+    <h1>여기는 test2 파일입니다.</h1>
+
+    <p>문자열 출력: {{stringValue}}</p>
+    <p>정수값 출력: {{intValue}}</p>
+
+    {{#hasData}}
+        여기는 참이면 화면에 보여질 섹션입니다.
+    {{/hasData}}
+
+    {{^hasData}}
+        여기는 거짓이면 보여질 섹션입니다.
+    {{/hasData}}
+    <br>
+    {{#items}}
+        {{.}}
+    {{/items}}
+
+    <br>
+    {{#map}}
+        {{key1}}
+    {{/map}}
+
+    {{map.key2}}
+
+    {{> layout/footer}}
