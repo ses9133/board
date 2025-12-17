@@ -1,5 +1,6 @@
 package org.example.demo_ssr_v1.reply;
 
+import org.example.demo_ssr_v1.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,7 +38,7 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
         WHERE r.id = :id
         ORDER BY r.createdAt ASC
 """)
-    List<Reply> findByIdWithUser(@Param("id") Long id);
+    Optional<Reply> findByIdWithUser(@Param("id") Long id);
 
     // 댓글 삭제 (네임드 쿼리)
     // 게시글 ID 로 댓글 삭제

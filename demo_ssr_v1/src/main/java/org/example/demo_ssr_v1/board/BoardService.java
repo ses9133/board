@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception403;
 import org.example.demo_ssr_v1._core.errors.exception.Exception404;
 import org.example.demo_ssr_v1.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,23 +19,38 @@ import java.util.List;
 public class BoardService {
     private final BoardRepository boardRepository;
 
-    // 읽기 전용 트랜잭션 - 성능 최적화
-    public List<BoardResponse.ListDTO> 게시글목록조회() {
-        // List<Board> --> List<BoardResponse.ListDTO>
-        List<Board> boardList = boardRepository.findAllWithUserByOrderByCreatedAtDesc();
+//    // 읽기 전용 트랜잭션 - 성능 최적화
+//    public List<BoardResponse.ListDTO> 게시글목록조회() {
+//        // List<Board> --> List<BoardResponse.ListDTO>
+//        List<Board> boardList = boardRepository.findAllWithUserByOrderByCreatedAtDesc();
+//
+//        // 1. 반복문 활용 방법
+////        List<BoardResponse.ListDTO> dtoList = new ArrayList<>();
+////        for(Board board: boardList) {
+////            BoardResponse.ListDTO dto = new BoardResponse.ListDTO(board);
+////            dtoList.add(dto);
+////        }
+////        return dtoList;
+//
+//        // 2. 람다식 활용 -> 참조메서드
+//        return boardList.stream()
+//                .map(BoardResponse.ListDTO::new)
+//                .toList();
+//    }
+    public BoardResponse.PageDTO 게시글목록조회(int page, int size) {
+        // page 는 0 부터 시작
+        // 상한선 제한
+        // size 는 기본값 5, 최소 1, 최대 50으로 제한
+        int validPage = Math.max(0, page); // 페이지 번호가 음수가 되는 것을 막음
+        int validSize = Math.max(1, Math.min(50, size));
 
-        // 1. 반복문 활용 방법
-//        List<BoardResponse.ListDTO> dtoList = new ArrayList<>();
-//        for(Board board: boardList) {
-//            BoardResponse.ListDTO dto = new BoardResponse.ListDTO(board);
-//            dtoList.add(dto);
-//        }
-//        return dtoList;
+        // 정렬 기준
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(validPage, validSize, sort);
 
-        // 2. 람다식 활용 -> 참조메서드
-        return boardList.stream()
-                .map(BoardResponse.ListDTO::new)
-                .toList();
+        Page<Board> boardPage = boardRepository.findAllWithUserByOrderByCreatedAtDesc(pageable);
+
+        return new BoardResponse.PageDTO(boardPage);
     }
 
     public BoardResponse.DetailDTO 게시글상세조회(Long boardId) {
