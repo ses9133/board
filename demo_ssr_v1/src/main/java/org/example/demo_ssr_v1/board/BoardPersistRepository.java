@@ -24,7 +24,7 @@ public class BoardPersistRepository {
     // 게시글 전체 조회
     public List<Board> findAll() {
         return entityManager
-                .createQuery("SELECT b FROM Board b ORDER BY b.createdAt DESC")
+                .createQuery("SELECT b FROM Board b ORDER BY b.createdAt DESC", Board.class)
                 .getResultList();
     }
 

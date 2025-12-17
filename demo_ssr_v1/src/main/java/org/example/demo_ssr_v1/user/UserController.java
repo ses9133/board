@@ -7,10 +7,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+/**
+ * 사용자 Controller (표현 계층)
+ * 핵심 개념:
+ *  - HTTP 요청을 받아서 처리
+ *  - 요청 데이터 검증 및 파라미터 바인딩
+ *  - Service 레이어에 비즈니스 로직을 위임
+ *  - 응답 데이터를 View에 전달함
+ * */
+
 @RequiredArgsConstructor
 @Controller
 public class UserController {
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     // 회원 정보 수정 화면 요청
     // http://localhost:8080/user/update
@@ -24,12 +33,14 @@ public class UserController {
         // 2. 유효성 검사(x)
         // 인증 검사를 하려면 세션 메모리에 접근해서 사용자의 정보가 있는지 없는지 유무 확인
         User sessionUser = (User) session.getAttribute("sessionUser");
-        if(sessionUser == null) {
-            System.out.println("로그인하지 않은 사용자입니다.");
-            return "redirect:/login";
-        }
+//        if(sessionUser == null) {
+//            System.out.println("로그인하지 않은 사용자입니다.");
+//            return "redirect:/login";
+//        } --> LoginInterceptor가 알아서 처리해줌
 
-        User user = userRepository.findById(sessionUser.getId());
+        // 2. 인가 처리
+        // 세션의 사용자 ID로 회원 정보 조회
+        User user = userService.회원정보수정화면(sessionUser.getId());
         model.addAttribute("user", user);
 
         return "user/update-form";
@@ -41,18 +52,16 @@ public class UserController {
     public String updateProc(UserRequest.UpdateDTO updateDTO, HttpSession session) {
         // 1. 인증검사
         User sessionUser = (User) session.getAttribute("sessionUser");
-        if(sessionUser == null) {
-            System.out.println("로그인하지 않은 사용자입니다.");
-            return "redirect:/login";
-        }
+//        if(sessionUser == null) {
+//            System.out.println("로그인하지 않은 사용자입니다.");
+//            return "redirect:/login";
+//        }
 
-        // 2. 유효성 검사
-        // 3. 세션 메모리에 있던 기존 상태값을 변경 처리
         try {
             updateDTO.validate();
-            User updatedUser = userRepository.updateById(sessionUser.getId(), updateDTO);
-            session.setAttribute("sessionUser", updatedUser); // 세션에 정보 갱신
-
+            User updatedUser = userService.회원정보수정(updateDTO, sessionUser.getId());
+            // 회원 정보 수정은 세션 갱신 필요
+            session.setAttribute("sessionUser", updatedUser);
             return "redirect:/";
         } catch (Exception e) {
             return "user/update-form";
@@ -69,11 +78,11 @@ public class UserController {
     }
 
     // 로그인 화면 요청
-        // http://localhost:8080/login
-        @GetMapping("/login")
-        public String loginForm() {
-            return "user/login-form";
-    }
+    // http://localhost:8080/login
+    @GetMapping("/login")
+    public String loginForm() {
+        return "user/login-form";
+}
 
     // 세션 기반 인증 처리(JWT 토큰 기반 인증 x)
     // 로그인 기능 요청
@@ -88,13 +97,7 @@ public class UserController {
         //     다음번 요청이 오더라도 알 수 있음  - 세션 저장 처리
         try {
             loginDTO.validate();
-            User sessionUser = userRepository.findByUsernameAndPassword(loginDTO.getUsername(),
-                    loginDTO.getPassword());
-
-            if(sessionUser == null) {
-                throw new IllegalArgumentException("사용자명 또는 비밀번호가 올바르지 않습니다.");
-            }
-
+            User sessionUser = userService.로그인(loginDTO);
             // 세션에 저장
             session.setAttribute("sessionUser", sessionUser);
             return "redirect:/";
@@ -115,16 +118,8 @@ public class UserController {
     public String joinProc(UserRequest.JoinDTO joinDTO) {
         // 1. 인증검사(X) - 필요없음 (회원가입임)
         // 2. 유효성 검사
-        // 3. 사용자 이름 중복 체크
         joinDTO.validate();
-
-        User existingUser = userRepository.findByUsername(joinDTO.getUsername());
-        if(existingUser != null) {
-            throw new IllegalArgumentException("이미 존재하는 사용자 이름입니다.");
-        }
-
-        User user = joinDTO.toEntity();
-        userRepository.save(user);
+        userService.회원가입(joinDTO);
 
         return "redirect:/login";
     }
