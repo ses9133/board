@@ -1,6 +1,7 @@
 package org.example.demo_ssr_v1.user;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 public class UserRequest {
     @Data
@@ -23,6 +24,9 @@ public class UserRequest {
         private String username;
         private String password;
         private String email;
+        // MultipartFile - Spring 에서 파일 업로드를 처리하기 위한 인터페이스
+        // 우리 프로젝트에서는 선택 사항이라 회원가입시 null 또는 empty 상태가 될 수 있음
+        private MultipartFile profileImage;
 
         public void validate() {
             if (username == null || username.trim().isEmpty()) {
@@ -40,11 +44,13 @@ public class UserRequest {
         }
 
         // JoinDTO -> User 타입으로 변환시키는 기능
-        public User toEntity() {
+        public User toEntity(String profileImageFileName) {
             return User.builder()
                     .username(this.username)
                     .password(this.password)
                     .email(this.email)
+                    // DB에는 MultipartFile을 저장할 수 없다(파일 이름만 저장할 예정)
+                    .profileImage(profileImageFileName)
                     .build();
         }
     }
@@ -53,6 +59,8 @@ public class UserRequest {
     public static class UpdateDTO {
         private String password;
         // username 제외
+        private MultipartFile profileImage;
+        private String profileImageFileName; // 추후 user update 메서드에서 사용함
 
         public void validate() {
             if (password == null || password.trim().isEmpty()) {

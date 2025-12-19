@@ -3,6 +3,7 @@ package org.example.demo_ssr_v1.board;
 import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception403;
 import org.example.demo_ssr_v1._core.errors.exception.Exception404;
+import org.example.demo_ssr_v1.reply.ReplyRepository;
 import org.example.demo_ssr_v1.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +19,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BoardService {
     private final BoardRepository boardRepository;
+    private final ReplyRepository replyRepository;
 
 //    // 읽기 전용 트랜잭션 - 성능 최적화
 //    public List<BoardResponse.ListDTO> 게시글목록조회() {
@@ -37,7 +39,7 @@ public class BoardService {
 //                .map(BoardResponse.ListDTO::new)
 //                .toList();
 //    }
-    public BoardResponse.PageDTO 게시글목록조회(int page, int size) {
+    public BoardResponse.PageDTO 게시글목록조회(int page, int size, String keyword) {
         // page 는 0 부터 시작
         // 상한선 제한
         // size 는 기본값 5, 최소 1, 최대 50으로 제한
@@ -48,7 +50,14 @@ public class BoardService {
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(validPage, validSize, sort);
 
-        Page<Board> boardPage = boardRepository.findAllWithUserByOrderByCreatedAtDesc(pageable);
+        Page<Board> boardPage;
+
+        if(keyword != null && !keyword.trim().isEmpty()) {
+            boardPage = boardRepository.findByTitleContainingOrContentContaining(keyword.trim(), pageable);
+        } else {
+            // 검색어 없을 때 사용
+            boardPage = boardRepository.findAllWithUserByOrderByCreatedAtDesc(pageable);
+        }
 
         return new BoardResponse.PageDTO(boardPage);
     }
@@ -113,6 +122,7 @@ public class BoardService {
         if (!boardEntity.isOwner(sessionUserId)) {
             throw new Exception403("게시글 수정 권한이 없습니다.");
         }
+        replyRepository.deleteByBoardId(boardId); // 제약 오류 발생해서 reply 먼저 삭제해야함
         boardRepository.deleteById(boardId);
     }
 }

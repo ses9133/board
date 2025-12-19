@@ -3,6 +3,13 @@
 
     <!-- 요청을 하면 localhost:8080/login POST로 요청됨
     username=사용자입력값&password=사용자값 -->
+    <!--
+       파일 업로드를 위한 form 태그 설정
+       enctype="multipart/form-data": 파일 형식을 포함한 MIME 타입을 의미한다.
+       즉, 이 속성없이는 파일이 서버로 전송되지 않는다.
+       일반 텍스트 데이터는  application/x-www-form-urlencoded
+       파일 데이터는 multipart/form-data 필요하다. 즉 application/x-www-form-urlencoded -> multipart/form-data 로 바꿔야함
+       -->
     <div class="card">
         <div class="card-header"><b>로그인을 해주세요</b></div>
         <div class="card-body">

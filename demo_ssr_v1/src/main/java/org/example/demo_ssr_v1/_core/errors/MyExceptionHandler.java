@@ -6,6 +6,7 @@ import org.example.demo_ssr_v1._core.errors.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -29,17 +30,33 @@ public class MyExceptionHandler {
         return "err/400";
     }
 
-    @ExceptionHandler(Exception401.class)
-    public String ex401(Exception401 e, HttpServletRequest request) {
-        log.warn("== 401 에러 발생 ==");
-        log.warn("요청 URL: {}", request.getRequestURL());
-        log.warn("에러 메시지: {}", e.getMessage());
-        log.warn("예외 클래스: {}", e.getClass().getSimpleName());
+//    @ExceptionHandler(Exception401.class)
+//    public String ex401(Exception401 e, HttpServletRequest request, Model model) {
+//        log.warn("== 401 에러 발생 ==");
+//        log.warn("요청 URL: {}", request.getRequestURL());
+//        log.warn("에러 메시지: {}", e.getMessage());
+//        log.warn("예외 클래스: {}", e.getClass().getSimpleName());
+//
+////        request.setAttribute("msg", e.getMessage());
+//        model.addAttribute("msg", e.getMessage());
+//
+//        return "err/401";
+//    }
+        @ExceptionHandler(Exception401.class)
+        @ResponseBody
+        public ResponseEntity<String> ex401(Exception401 e) {
+            String script = "<script>" +
+                    "alert('" + e.getMessage() + "');" +
+                    "location.href = '/login'" +
+                    "</script>";
 
-        request.setAttribute("msg", e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(script);
+        }
 
-        return "err/401";
-    }
+
 
 //    @ExceptionHandler(Exception403.class)
 //    public String ex403(Exception403 e, HttpServletRequest request) {
@@ -66,15 +83,17 @@ public class MyExceptionHandler {
                 .body(script);
     }
 
+    // 템플릿 파일에서 세션 정보와 Request 객체를 바로 접근못하게 막았음(기본값)
+    //
     @ExceptionHandler(Exception404.class)
-    public String ex404(Exception404 e, HttpServletRequest request) {
+    public String ex404(Exception404 e, HttpServletRequest request, Model model) {
         log.warn("== 404 에러 발생 ==");
         log.warn("요청 URL: {}", request.getRequestURL());
         log.warn("에러 메시지: {}", e.getMessage());
         log.warn("예외 클래스: {}", e.getClass().getSimpleName());
 
-        request.setAttribute("msg", e.getMessage());
-
+//        request.setAttribute("msg", e.getMessage());
+        model.addAttribute("msg", e.getMessage());
         return "err/404";
     }
 

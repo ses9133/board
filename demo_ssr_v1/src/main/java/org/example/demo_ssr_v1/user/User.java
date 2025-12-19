@@ -27,13 +27,16 @@ public class User {
     @CreationTimestamp
     private Timestamp createdAt;
 
+    private String profileImage;
+
     @Builder
-    public User(Long id, String username, String password, String email, Timestamp createdAt) {
+    public User(Long id, String username, String password, String email, Timestamp createdAt, String profileImage) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.email = email;
         this.createdAt = createdAt;
+        this.profileImage = profileImage;
     }
 
     // 회원 정보 수정 로직
@@ -42,6 +45,7 @@ public class User {
         // 유효성 검사
         updateDTO.validate();
         this.password = updateDTO.getPassword();
+        this.profileImage = updateDTO.getProfileImageFileName();
 
         // 더티 체킹(변경 감지)
 

@@ -86,30 +86,23 @@ public class BoardController {
     //@ResponseBody // 뷰 리졸브(X) 데이터 반환
     public String boardList(Model model,
                                  @RequestParam(defaultValue = "1") int page,
-                                 @RequestParam(defaultValue = "3") int size) {
+                                 @RequestParam(defaultValue = "3") int size,
+                                 @RequestParam(required = false) String keyword) {
 
         // 1. 페이지 번호 변환: 사용자는 1부터 시작하는 페이지 번호를 사용하지만
         //  Spring의 Pageable 은 0 부터 시작하므로 1을 빼서 변환해야함
         int pageIndex = Math.max(0, page - 1);
 
 //        return boardService.게시글목록조회(pageIndex, size);
-        BoardResponse.PageDTO boardPage = boardService.게시글목록조회(pageIndex, size);
+        BoardResponse.PageDTO boardPage = boardService.게시글목록조회(pageIndex, size, keyword);
+        model.addAttribute("keyword", keyword);
         model.addAttribute("boardPage", boardPage);
 
         return "board/list";
     }
 
-    /**
-     * 게시글 작성 화면 요청
-     * @param session
-     * @return
-     */
     @GetMapping("/board/save")
-    public String saveForm(HttpSession session) {
-        User sessionUser = (User) session.getAttribute("sessionUser");
-//        if(sessionUser == null) {
-//            throw new Exception401("로그인이 필요합니다.");
-//        }
+    public String saveForm() {
         return "board/save-form";
     }
 
