@@ -62,7 +62,7 @@ public class UserService {
     // 로그인
     public User 로그인(UserRequest.LoginDTO loginDTO) {
         // 사용자가 던진 값과 DB 에 사용자 이름과 비밀번호를 확인
-        User user = userRepository.findByUsernameAndPassword(loginDTO.getUsername(), loginDTO.getPassword())
+        User user = userRepository.findByUsernameAndPasswordWithRoles(loginDTO.getUsername(), loginDTO.getPassword())
                 .orElse(null); // 로그인 실패시 null 반환
 
         if (user == null) {

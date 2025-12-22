@@ -7,53 +7,110 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
+// 엔티티 화면 보고 설계해 보세요.
+@NoArgsConstructor
+@Data
 @Table(name = "user_tb")
 @Entity
-@Data
-@NoArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
     private String username;
-
     private String password;
-
     private String email;
 
     @CreationTimestamp
     private Timestamp createdAt;
 
-    private String profileImage;
+    //@Column(nullable = false)
+    private String profileImage; // 추가
+
+    /**
+     * User(1) : UserRole(N)
+     * User 가 UserRole 리스트를 관리함(단방향)
+     * 실제 DB의 user_role_tb 테이블에 user_id 라는 FK 컬럼 생김
+     *
+     * CascadeType.ALL
+     * - 운명 공동체 User 를 저장하면 Role 도 자동저잘되고,
+     * - User 를 삭제하면 가지고 있던 Role 들도 다같이 삭제됨
+     *
+     * orphanRemoval = true
+     * - 리스트와 DB의 동기화
+     * - 자바의 roles 리스트에서 요소(Role)를 .remove() 하거나 .clear() 하면
+     * - DB 에서도 해당 데이터에 Delete 쿼리 실행됨
+     */
+    // 나중에 다른 개발자가 findById (쿼리메서드) 호출시 신경쓸 필요 없이 전부 role 까지 반환해줌
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    private List<UserRole> roles = new ArrayList<>();
 
     @Builder
-    public User(Long id, String username, String password, String email, Timestamp createdAt, String profileImage) {
+    public User(Long id, String username, String password,
+                String email, Timestamp createdAt, String profileImage) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.email = email;
         this.createdAt = createdAt;
-        this.profileImage = profileImage;
+        this.profileImage = profileImage;  // 추가
     }
 
-    // 회원 정보 수정 로직
-    // 추후 DTO 설계
+    // 회원정보 수정 비즈니스 로직 추가
+    // 추후 DTO  설계
     public void update(UserRequest.UpdateDTO updateDTO) {
         // 유효성 검사
         updateDTO.validate();
         this.password = updateDTO.getPassword();
+        // 추가
         this.profileImage = updateDTO.getProfileImageFileName();
-
-        // 더티 체킹(변경 감지)
-
-        // 트랜잭션 끝나면 자동으로 update 쿼리 진행
+        // 더티 체킹 (변경 감지)
+        // 트랜잭션이 끝나면 자동으로 update 쿼리 진행
     }
 
     // 회원 정보 소유자 확인 로직
     public boolean isOwner(Long userId) {
         return this.id.equals(userId);
     }
+
+    // 새로운 역할 추가하는 기능
+    public void addRole(Role role) {
+        this.roles.add(UserRole.builder()
+                        .role(role)
+                         .build());
+    }
+
+    // 해당 역할을 가지고 있는지 확인하는 기능
+    public boolean hasRole(Role role) {
+        // roles 에 컬렉션이 없거나 비어있으면 역할이 없는 것
+        if(this.roles == null || this.roles.isEmpty()) {
+            return false;
+        }
+        // 즉시 로딩이라서 바로 사용해도 LAZY 초기화 예외 안터짐
+        // anyMatch: 리스트 중 단 하나라도 조건에 맞는게 있다면 true 반환
+        return this.roles.stream()
+                .anyMatch(r -> r.getRole() == role);
+    }
+
+    // 관리자인지 여부를 반환
+    public boolean isAdmin() {
+        return hasRole(Role.ADMIN);
+    }
+
+    // 템플릿에서 {{#isAdmin}} ... {{/isAdmin}} 형태로 사용하는 편의 메서드 설계
+    public boolean getIsAdmin() {
+        return isAdmin();
+    }
+
+    // 화면에 표시할 역할 문자열 제공
+    public String getRoleDisplay() {
+        return isAdmin() ? "ADMIN" : "USER";
+    }
+
 }

@@ -20,7 +20,6 @@
         </button>
         <div class="collapse navbar-collapse" id="collapsibleNavbar">
             <ul class="navbar-nav">
-
                 {{#sessionUser}}
                 <li class="nav-item">
                     <a class="nav-link" href="/board/save">글쓰기</a>
@@ -28,6 +27,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/user/detail">회원정보보기</a>
                 </li>
+                {{#isAdmin}}
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard">관리자</a>
+                </li>
+                {{/isAdmin}}
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">로그아웃</a>
                 </li>
@@ -41,8 +45,18 @@
                     <a class="nav-link" href="/login">로그인</a>
                 </li>
                 {{/sessionUser}}
-
             </ul>
+
+            <!-- 오른쪽에 역할/이름 영역 -->
+            <ul class="navbar-nav ms-auto">
+                {{#sessionUser}}
+                    <li class="nav-item d-flex align-items-center">
+                        <span class="badge bg-secondary me-2">{{getRoleDisplay}}</span>
+                        <span class="text-light">{{username}} 님</span>
+                    </li>
+                {{/sessionUser}}
+            </ul>
+
         </div>
     </div>
 </nav>
