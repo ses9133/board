@@ -40,6 +40,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/login",
                         "/join",
                         "/logout",
+                        "/user/kakao",
                         "/board/list",
                         "/",
                         "/board/{id:\\d+}",

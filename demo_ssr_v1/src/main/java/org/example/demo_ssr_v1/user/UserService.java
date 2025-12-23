@@ -1,5 +1,6 @@
 package org.example.demo_ssr_v1.user;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception400;
 import org.example.demo_ssr_v1._core.errors.exception.Exception403;
@@ -168,5 +169,15 @@ public class UserService {
         userEntity.setProfileImage(null);
 
         return userEntity;
+    }
+
+    public User 사용자이름조회(String username) {
+        return userRepository.findByUsername(username)
+                .orElse(null);
+    }
+
+    @Transactional
+    public void 소셜회원가입(User user) {
+        userRepository.save(user);
     }
 }

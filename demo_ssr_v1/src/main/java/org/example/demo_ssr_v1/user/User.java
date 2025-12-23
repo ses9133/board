@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
@@ -51,15 +52,22 @@ public class User {
     @JoinColumn(name = "user_id")
     private List<UserRole> roles = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @ColumnDefault("'LOCAL'") // 기본값 세팅. 문자열이므로 작은 따옴표 필수
+    private OAuthProvider provider;
+
     @Builder
     public User(Long id, String username, String password,
-                String email, Timestamp createdAt, String profileImage) {
+                String email, Timestamp createdAt, String profileImage,
+                OAuthProvider provider) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.email = email;
         this.createdAt = createdAt;
         this.profileImage = profileImage;  // 추가
+        this.provider = provider != null ? provider : OAuthProvider.LOCAL;
     }
 
     // 회원정보 수정 비즈니스 로직 추가
@@ -113,4 +121,18 @@ public class User {
         return isAdmin() ? "ADMIN" : "USER";
     }
 
+    // 분기처리(머스태치 화면에서는 서버에 저장된 이미지든 URL 이미지든,
+    // 그냥 getProfilePath 변수를 호출하면 알아서 세팅되게 할 것임)
+    public String getProfilePath() {
+        if(this.profileImage == null) {
+            return null;
+        }
+        // https 로 시작하면 소셜 이미지 URL 그대로 리턴
+        if(this.profileImage.startsWith("http")) {
+            return this.profileImage;
+        }
+        // 아니면 로컬이미지(우리 서버에 저장된) 폴더 경로 붙여서 리턴
+        return "/images/" + this.profileImage;
+
+    }
 }
