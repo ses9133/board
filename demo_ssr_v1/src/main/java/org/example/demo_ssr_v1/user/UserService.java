@@ -1,14 +1,22 @@
 package org.example.demo_ssr_v1.user;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception400;
 import org.example.demo_ssr_v1._core.errors.exception.Exception403;
 import org.example.demo_ssr_v1._core.errors.exception.Exception404;
 import org.example.demo_ssr_v1._core.errors.exception.Exception500;
 import org.example.demo_ssr_v1._core.utils.FileUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 
@@ -28,8 +36,121 @@ import java.io.IOException;
 @Transactional(readOnly = true)
 public class UserService {
     // 객체 지향 개념 (SOLID)
-    // DIP - 추상화가 높은 녀석을 선언하는 것이 좋다.
+    // DIP - 추상화가 높은 인터페이스를 선언하는 것이 좋다.
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Value("${oauth.kakao.client-id}")
+    private String clientId;
+
+    @Value("${tenco.key}")
+    private String tencoKey;
+
+    @Value("${oauth.kakao.client-secret}")
+    private String clientSecret;
+
+    public User 카카오소셜로그인(String code) {
+        // 1. 인가코드로 액세스 토큰 발급
+        UserResponse.OAuthToken oAuthToken = 카카오액세스토큰발급(code);
+
+        // 2. 액세스 토큰으로 프로필 정보 조회
+        UserResponse.KaKaoProfile kaKaoProfile = 카카오프로필조회(oAuthToken.getAccessToken());
+
+        // 3. 프로필 정보로 사용자 생성 또는 조회
+        User user = 카카오사용자생성또는조회(kaKaoProfile);
+
+        // 4. 로그인 처리(엔티티 반환)
+        return user;
+    }
+
+    /**
+     * 카카오 인가 코드로 액세스 토큰 발급
+     * @param code 카카오 인가 코드
+     * @return Oauth 액세스 토큰 정보
+     */
+    private UserResponse.OAuthToken 카카오액세스토큰발급(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders tokenHeaders = new HttpHeaders();
+        tokenHeaders.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        // 2.4 HTTP 메시지 바디 구성
+        MultiValueMap<String, String> tokenParams = new LinkedMultiValueMap<>();
+        tokenParams.add("grant_type", "authorization_code");
+        tokenParams.add("client_id", clientId);
+        tokenParams.add("redirect_uri", "http://localhost:8080/user/kakao");
+        tokenParams.add("code", code);
+
+        tokenParams.add("client_secret", clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(tokenParams, tokenHeaders);
+        ResponseEntity<UserResponse.OAuthToken> tokenResponse = restTemplate.exchange(
+                "https://kauth.kakao.com/oauth/token",
+                HttpMethod.POST,
+                tokenRequest,
+                UserResponse.OAuthToken.class
+        );
+
+        UserResponse.OAuthToken oAuthToken = tokenResponse.getBody();
+        return oAuthToken;
+    }
+
+    /**
+     * 카카오 액세스 토큰으로 프로필 정보 조회
+     * @param accessToken 카카오 액세스 토큰
+     * @return 카카오 프로필정보
+     */
+    private UserResponse.KaKaoProfile 카카오프로필조회(String accessToken) {
+        RestTemplate profileRt = new RestTemplate();
+
+        HttpHeaders profileHeaders = new HttpHeaders();
+
+        profileHeaders.add("Authorization", "Bearer " + accessToken);
+        profileHeaders.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        HttpEntity<Void> profileRequest = new HttpEntity<>(profileHeaders);
+
+        ResponseEntity<UserResponse.KaKaoProfile> profileResponse = profileRt.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                profileRequest,
+                UserResponse.KaKaoProfile.class
+        );
+
+        UserResponse.KaKaoProfile kaKaoProfile = profileResponse.getBody();
+        return kaKaoProfile;
+    }
+
+    /**
+     *
+     * @param kaKaoProfile
+     * @return
+     */
+    private User 카카오사용자생성또는조회(UserResponse.KaKaoProfile kaKaoProfile) {
+        String username =  kaKaoProfile.getProperties().getNickname() + "_" + kaKaoProfile.getId();
+
+        User userOrigin = 사용자이름조회(username);
+        if(userOrigin == null) {
+            System.out.println("기존 회원이 아니므로 자동 회원가입 진행시킴");
+            User newUser = User.builder()
+                    .username(username)
+                    .password(passwordEncoder.encode(tencoKey))
+                    .email(username + "@kakao.com")
+                    .provider(OAuthProvider.KAKAO)
+                    .build();
+
+            String profileImage = kaKaoProfile.getProperties().getProfileImage();
+            if(profileImage != null && !profileImage.isEmpty()) {
+                newUser.setProfileImage(profileImage);
+            }
+
+            소셜회원가입(newUser);
+            userOrigin = newUser; // 📌 필수 !!
+        } else {
+            System.out.println("이미 가입된 회원입니다. 바로 로그인처리 진행합니다.");
+        }
+        return userOrigin;
+    }
 
     // 회원가입
     @Transactional
@@ -44,7 +165,8 @@ public class UserService {
         String profileImageFileName = null;
 
         // 2. 회원가입시 파일이 넘어왔는지 확인
-        if (joinDTO.getProfileImage() != null) {
+        // MultipartFile (기본적으로 null 이 넘어올 수도, ""(공백)으로 들어올 수 도 있음)
+        if (joinDTO.getProfileImage() != null && !joinDTO.getProfileImage().isEmpty()) {
             // 2.1 유효성 검사
             try {
                 if (!FileUtil.isImageFile(joinDTO.getProfileImage())) {
@@ -56,19 +178,35 @@ public class UserService {
             }
 
         }
+
+        // 평문 비밀번호를 해싱하여 해시값을 만들어줌
+        String hashPwd = passwordEncoder.encode(joinDTO.getPassword());
+        System.out.println("======== hashPwd: " + hashPwd);
+
         User user = joinDTO.toEntity(profileImageFileName);
+        // 비밀번호를 평문에서 해시값으로 변경해주어야 함
+        user.setPassword(hashPwd);
+
         return userRepository.save(user);
     }
 
     // 로그인
     public User 로그인(UserRequest.LoginDTO loginDTO) {
         // 사용자가 던진 값과 DB 에 사용자 이름과 비밀번호를 확인
-        User user = userRepository.findByUsernameAndPasswordWithRoles(loginDTO.getUsername(), loginDTO.getPassword())
+        User user = userRepository.findByUsernameWithRoles(loginDTO.getUsername())
                 .orElse(null); // 로그인 실패시 null 반환
 
         if (user == null) {
+            throw new Exception400("사용자가 존재하지 않습니다.");
+        }
+
+        // 비밀번호 검증 (BCrypt matches 메서드를 사용해서 비교하면 된다.)
+        // 일치하면 true, 불일치하면 false 반환
+        if(!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+            System.out.println("사용자명 또는 비밀번호가 올바르지 않습니다.");
             throw new Exception400("사용자명 또는 비밀번호가 올바르지 않습니다.");
         }
+        // 기존 샘플 데이터로 회원가입된 사용자들로는 로그인을 못함
         return user;
     }
 
@@ -124,6 +262,9 @@ public class UserService {
             // 새 이미지가 업로드 되지 않았으면 기존 이미지 파일 이름 유지
             updateDTO.setProfileImageFileName(oldProfileImage);
         }
+        // 비밀번호 암호화 처리
+        String hashPwd = passwordEncoder.encode(updateDTO.getPassword());
+        updateDTO.setPassword(hashPwd);
 
         // 객체 상태값 변경 (트랜잭션이 끝나면 자동으로 commit 및 반영할 것임)
         userEntity.update(updateDTO);

@@ -4,7 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.interceptor.AdminInterceptor;
 import org.example.demo_ssr_v1._core.interceptor.LoginInterceptor;
 import org.example.demo_ssr_v1._core.interceptor.SessionInterceptor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -76,5 +79,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // file:///D:/uploads/ --> 내 컴퓨터 절대 경로를 의미한다.
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("file:///D:/uploads/");
+    }
+
+    @Bean // IoC 처리 (스프링 컨테이너에 싱글톤 패턴으로 객체가 메모리에 올라간다)
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

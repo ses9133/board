@@ -133,6 +133,9 @@ public class User {
         }
         // 아니면 로컬이미지(우리 서버에 저장된) 폴더 경로 붙여서 리턴
         return "/images/" + this.profileImage;
+    }
 
+    public boolean isLocal() {
+        return this.provider == OAuthProvider.LOCAL;
     }
 }
