@@ -20,15 +20,23 @@ public class MyExceptionHandler {
 
     // 내가 지켜볼 예외를 명시해주면 ControllerAdvice가 가지고 와서 처리함
     @ExceptionHandler(Exception400.class)  // Exception400 예외를 잡음
-    public String ex400(Exception400 e, HttpServletRequest request) {
+    @ResponseBody
+    public ResponseEntity<String> ex400(Exception400 e, HttpServletRequest request) {
         log.warn("== 400 에러 발생 ==");
         log.warn("요청 URL: {}", request.getRequestURL()); // 사용자가 던진 URL 확인 가능
         log.warn("에러 메시지: {}", e.getMessage());
         log.warn("예외 클래스: {}", e.getClass().getSimpleName());
 
-        request.setAttribute("msg", e.getMessage());
+        // 방어적 코드 추가
+        String message = e.getMessage() != null ? e.getMessage() : "잘못된 요청입니다.";
 
-        return "err/400";
+        String script = "<script>" +
+                "alert('" + message + "');" +
+                "history.back();" +
+                "</script>";
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.TEXT_HTML)
+                .body(script);
     }
 
 //    @ExceptionHandler(Exception401.class)

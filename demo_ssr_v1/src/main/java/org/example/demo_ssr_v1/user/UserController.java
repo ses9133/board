@@ -1,24 +1,13 @@
 package org.example.demo_ssr_v1.user;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception401;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.client.RestTemplate;
 
 
 /**
@@ -41,6 +30,13 @@ public class UserController {
 //        System.out.println("현재 적용된 카카오 클라이언트 키 확인: " + clientId);
 //        System.out.println("현재 적용된 나의 시크릿 키 키 확인: " + tencoKey);
 //    }
+
+    @GetMapping("/user/point/charge")
+    public String chargePointForm(Model model, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        model.addAttribute("user", sessionUser);
+        return "user/charge-point";
+    }
 
     @GetMapping("/user/kakao")
     public String kakaoCallback(@RequestParam(name = "code") String code, HttpSession session) {

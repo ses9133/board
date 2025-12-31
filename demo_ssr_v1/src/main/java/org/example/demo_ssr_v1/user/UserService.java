@@ -49,6 +49,7 @@ public class UserService {
     @Value("${oauth.kakao.client-secret}")
     private String clientSecret;
 
+    @Transactional
     public User 카카오소셜로그인(String code) {
         // 1. 인가코드로 액세스 토큰 발급
         UserResponse.OAuthToken oAuthToken = 카카오액세스토큰발급(code);
@@ -126,7 +127,8 @@ public class UserService {
      * @param kaKaoProfile
      * @return
      */
-    private User 카카오사용자생성또는조회(UserResponse.KaKaoProfile kaKaoProfile) {
+    @Transactional
+    public User 카카오사용자생성또는조회(UserResponse.KaKaoProfile kaKaoProfile) {
         String username =  kaKaoProfile.getProperties().getNickname() + "_" + kaKaoProfile.getId();
 
         User userOrigin = 사용자이름조회(username);
@@ -162,6 +164,11 @@ public class UserService {
             throw new Exception400("이미 존재하는 사용자 이름입니다.");
         }
 
+        // 1.1 이메일 중복 체크
+        if(userRepository.findByEmail(joinDTO.getEmail()).isPresent()) {
+            throw new Exception400("이미 등록된 이메일 입니다.");
+        }
+
         String profileImageFileName = null;
 
         // 2. 회원가입시 파일이 넘어왔는지 확인
@@ -191,6 +198,7 @@ public class UserService {
     }
 
     // 로그인
+    @Transactional
     public User 로그인(UserRequest.LoginDTO loginDTO) {
         // 사용자가 던진 값과 DB 에 사용자 이름과 비밀번호를 확인
         User user = userRepository.findByUsernameWithRoles(loginDTO.getUsername())
@@ -320,5 +328,16 @@ public class UserService {
     @Transactional
     public void 소셜회원가입(User user) {
         userRepository.save(user);
+    }
+
+    @Transactional
+    public User 포인트충전(Long userId, Integer amount) {
+        // 1.  사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new Exception404("해당 사용자를 조회할 수 없습니다."));
+
+        // 2. 포인트 충전
+        user.chargePoint(amount);
+        return userRepository.save(user);
     }
 }
