@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1.reply.ReplyResponse;
 import org.example.demo_ssr_v1.reply.ReplyService;
 import org.example.demo_ssr_v1.user.User;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
