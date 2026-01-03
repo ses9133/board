@@ -3,6 +3,7 @@ package org.example.demo_ssr_v1._core.errors;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.example.demo_ssr_v1._core.errors.exception.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +20,23 @@ public class MyExceptionHandler {
 
     // 내가 지켜볼 예외를 명시해주면 ControllerAdvice가 가지고 와서 처리함
     @ExceptionHandler(Exception400.class)  // Exception400 예외를 잡음
-    public String ex400(Exception400 e, HttpServletRequest request) {
+    @ResponseBody
+    public ResponseEntity<String> ex400(Exception400 e, HttpServletRequest request) {
         log.warn("== 400 에러 발생 ==");
         log.warn("요청 URL: {}", request.getRequestURL()); // 사용자가 던진 URL 확인 가능
         log.warn("에러 메시지: {}", e.getMessage());
         log.warn("예외 클래스: {}", e.getClass().getSimpleName());
 
-        request.setAttribute("msg", e.getMessage());
+        // 방어적 코드 추가
+        String message = e.getMessage() != null ? e.getMessage() : "잘못된 요청입니다.";
 
-        return "err/400";
+        String script = "<script>" +
+                "alert('" + message + "');" +
+                "history.back();" +
+                "</script>";
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .contentType(MediaType.TEXT_HTML)
+                .body(script);
     }
 
 //    @ExceptionHandler(Exception401.class)
@@ -106,6 +115,37 @@ public class MyExceptionHandler {
 
         request.setAttribute("msg", e.getMessage());
 
+        return "err/500";
+    }
+
+    // 데이터베이스 제약 조건 위반 예외 처리
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public String handleDataViolationException(DataIntegrityViolationException e, HttpServletRequest request, Model model) {
+        log.warn("== 데이터베이스 제약조건 위반 오류 발생 ==");
+        log.warn("요청 URL: {}", request.getRequestURL());
+        log.warn("에러 메시지: {}", e.getMessage());
+        log.warn("예외 클래스: {}", e.getClass().getSimpleName());
+
+        // 외래키 제약조건 위반인 경우
+        String errorMessage = e.getMessage();
+        if(errorMessage != null && errorMessage.contains("FOREIGN KEY")) {
+            model.addAttribute("msg", "관련된 데이터가 있어 삭제할 수 없습니다.");
+        } else {
+            model.addAttribute("msg", "데이터베이스 제약 조건 위반");
+        }
+
+        return "err/500";
+    }
+
+    // 클래스 로딩 오류 처리(NoClassDefFoundException, ClassNotFoundException...)
+    @ExceptionHandler(Error.class)
+    public String handleError(Error e, HttpServletRequest request, Model model) {
+        log.warn("== 클래스 로딩 오류 발생 ==");
+        log.warn("요청 URL: {}", request.getRequestURL());
+        log.warn("에러 메시지: {}", e.getMessage());
+        log.warn("예외 클래스: {}", e.getClass().getSimpleName());
+
+        model.addAttribute("msg", "심각한 오류 발생(클래스를 찾을 수 없습니다.)");
         return "err/500";
     }
 

@@ -37,8 +37,10 @@ public class BoardResponse {
         private Long userId;
         private String username;
         private String createdAt;
+        private Boolean premium;
+        private Boolean isPurchased; // 로그인한 사용자가 해당 글을 구매했는지 (단, 작성자는 제외)
 
-        public DetailDTO(Board board) {
+        public DetailDTO(Board board, Boolean isPurchased) {
             this.id = board.getId();
             this.title = board.getTitle();
             this.content = board.getContent();
@@ -50,6 +52,8 @@ public class BoardResponse {
             if(board.getCreatedAt() != null) {
                 this.createdAt = MyDateUtil.format(board.getCreatedAt());
             }
+            this.premium = board.getPremium() != null && board.getPremium();
+            this.isPurchased = isPurchased != null && isPurchased;
         }
     }
     /**
@@ -60,11 +64,13 @@ public class BoardResponse {
         private Long id;
         private String title;
         private String content;
+        private Boolean premium;
 
         public UpdateFormDTO(Board board) {
             this.id = board.getId();
             this.title = board.getTitle();
             this.content = board.getContent();
+            this.premium = board.getPremium() != null ? board.getPremium() : false;
         }
     }
 

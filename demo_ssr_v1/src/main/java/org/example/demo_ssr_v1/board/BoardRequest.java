@@ -11,10 +11,16 @@ public class BoardRequest {
     public static class SaveDTO {
         private String title;
         private String content;
+        private Boolean premium;
         private String username;
 
         public Board toEntity(User user) {
-            return new Board(title, content, user);
+            return Board.builder()
+                    .title(title)
+                    .content(content)
+                    .premium(premium != null ? premium : false) // 체크박스 주의
+                    .user(user)
+                    .build();
         }
     }
 
@@ -22,6 +28,7 @@ public class BoardRequest {
     public static class UpdateDTO {
         private String title;
         private String content;
+        private Boolean premium;
 
         // 검증 메서드
         public void validate() {

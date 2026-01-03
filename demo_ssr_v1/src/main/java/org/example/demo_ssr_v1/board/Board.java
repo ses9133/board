@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.demo_ssr_v1.user.User;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
@@ -20,6 +21,10 @@ public class Board {
     private String title;
     private String content;
 
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private Boolean premium = false;
+
     // N : 1
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -30,9 +35,11 @@ public class Board {
     private Timestamp createdAt;
 
     @Builder
-    public Board(String title, String content, User user) {
+    public Board(String title, String content, Boolean premium, User user) {
         this.title = title;
         this.content = content;
+        // 체크박스는 값이 있으면 true, 없으면 null로 들어옴
+        this.premium = premium != null && premium;
         this.user = user;
     }
 
@@ -45,6 +52,8 @@ public class Board {
 
         // 게시글 수정은 작성자를 변경할 수 없게 할 것임
         // this.user = updateDTO.getUsername();
+
+        this.premium = updateDTO.getPremium() != null && updateDTO.getPremium(); // 체크 박스 주의
     }
 
     // 게시글 소유자 확인 로직

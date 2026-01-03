@@ -2,6 +2,7 @@ package org.example.demo_ssr_v1.board;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.example.demo_ssr_v1.purchase.PurchaseService;
 import org.example.demo_ssr_v1.reply.ReplyResponse;
 import org.example.demo_ssr_v1.reply.ReplyService;
 import org.example.demo_ssr_v1.user.User;
@@ -17,6 +18,7 @@ public class BoardController {
 
     private final BoardService boardService;
     private final ReplyService replyService;
+    private final PurchaseService purchaseService;
 
     /**
      * 게시글 수정 화면 요청
@@ -145,19 +147,19 @@ public class BoardController {
      */
     @GetMapping("/board/{id}")
     public String detail(@PathVariable Long id, Model model, HttpSession session) {
-        BoardResponse.DetailDTO board = boardService.게시글상세조회(id);
-
         // 세션에 로그인 사용자 정보 조회(없을 수 도 있음)
         User sessionUser = (User) session.getAttribute("sessionUser");
-        boolean isOwner = false;
+        Long sessionUserId = sessionUser != null ? sessionUser.getId() : null;
 
+        BoardResponse.DetailDTO board = boardService.게시글상세조회(id, sessionUserId);
+
+        boolean isOwner = false;
         if(sessionUser != null && board.getUserId() !=null) {
             isOwner = board.getUserId().equals(sessionUser.getId());
         }
 
         // 댓글 목록 조회 (추가)
         // 로그인 안 한 상태에서 댓글 목록 요청시에 sessionUserId 는 null 값임
-        Long sessionUserId = sessionUser != null ? sessionUser.getId() : null;
         List<ReplyResponse.ListDTO> replyList = replyService.댓글목록조회(id, sessionUserId);
 
         model.addAttribute("replyList", replyList);
@@ -165,6 +167,14 @@ public class BoardController {
         model.addAttribute("board", board);
 
         return "board/detail";
+    }
+
+    @PostMapping("/board/{boardId}/purchase")
+    public String purchase(@PathVariable Long boardId, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        purchaseService.구매하기(sessionUser.getId(), boardId);
+        return "redirect:/board/" + boardId;
+
     }
 
 }

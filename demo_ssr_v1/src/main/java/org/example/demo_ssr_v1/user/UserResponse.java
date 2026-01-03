@@ -1,5 +1,8 @@
 package org.example.demo_ssr_v1.user;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.Data;
 
 public class UserResponse {
@@ -36,4 +39,31 @@ public class UserResponse {
         }
     }
 
+    // 카카오 JWT DTO 설계
+    @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
+    // @JsonNaming: 자바 객체의 필드명 <-> JSON(스네이크 표기법) 자동 변환
+    @Data
+    public static class OAuthToken {
+        private String tokenType;
+        private String accessToken;
+        private Integer expiresIn;
+        private String refreshToken;
+        private Integer refreshTokenExpiresIn;
+    }
+
+    @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @Data
+    public static class KaKaoProfile {
+        private Long id;
+        private String connectedAt;
+        private Properties properties;
+    }
+
+    @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
+    @Data
+    public static class Properties {
+        private String nickname;
+        private String profileImage;
+        private String thumbnailImage;
+    }
 }

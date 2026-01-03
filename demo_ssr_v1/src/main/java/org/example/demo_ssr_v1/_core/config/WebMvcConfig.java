@@ -1,9 +1,13 @@
 package org.example.demo_ssr_v1._core.config;
 
 import lombok.RequiredArgsConstructor;
+import org.example.demo_ssr_v1._core.interceptor.AdminInterceptor;
 import org.example.demo_ssr_v1._core.interceptor.LoginInterceptor;
 import org.example.demo_ssr_v1._core.interceptor.SessionInterceptor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -18,6 +22,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final LoginInterceptor loginInterceptor;
     private final SessionInterceptor sessionInterceptor;
+    private final AdminInterceptor adminInterceptor;
 
     // 인터셉터는 여러개 등록 가능
     @Override
@@ -33,11 +38,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 단, 특정 URL 은 제외시킬 것임
         registry.addInterceptor(loginInterceptor)
                 // /** -> 모든 URL 이 제외 대상이 됨
-                .addPathPatterns("/board/**", "/user/**", "/reply/**")
+                .addPathPatterns("/board/**", "/user/**", "/reply/**", "/admin/**")
                 .excludePathPatterns(
                         "/login",
                         "/join",
                         "/logout",
+                        "/user/kakao",
                         "/board/list",
                         "/",
                         "/board/{id:\\d+}",
@@ -47,6 +53,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/favicon.io",
                         "/h2-console/**"
                 );
+
+        registry.addInterceptor(adminInterceptor)
+                // 관리자 전용 페이지에만 적용처리
+                .addPathPatterns("/admin/**");
     }
 
     /**
@@ -69,5 +79,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // file:///D:/uploads/ --> 내 컴퓨터 절대 경로를 의미한다.
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("file:///D:/uploads/");
+    }
+
+    @Bean // IoC 처리 (스프링 컨테이너에 싱글톤 패턴으로 객체가 메모리에 올라간다)
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
