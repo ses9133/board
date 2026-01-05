@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import org.example.demo_ssr_v1.board.Board;
 import org.example.demo_ssr_v1.user.User;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.sql.Timestamp;
 

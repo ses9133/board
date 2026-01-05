@@ -24,4 +24,19 @@ public class PaymentRequest {
             }
         }
     }
+
+    @Data // 결제 검증 요청 DTO
+    public static class verifyDTO {
+        private String impUid; // 포트원 결제 고유 번호
+        private String merchantUid; // 우리 서버(가맹점) 주문 번호
+
+        public void validate() {
+            if(impUid == null || impUid.trim().isEmpty()) {
+                throw new Exception400("결제 고유 번호가 필요합니다.");
+            }
+            if(merchantUid == null || merchantUid.trim().isEmpty()) {
+                throw new Exception400("주문 고유 번호가 필요합니다.");
+            }
+        }
+    }
 }

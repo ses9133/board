@@ -15,6 +15,23 @@ logging:
     com.example: DEBUG   # 내 프로젝트는 DEBUG 이상 모두 출력
 
 spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    #발신자 계정
+    username: ${GMAIL_USERNAME}
+    #주의: 자신의 메일 비밀번호아님 SMTP 앱 비밀번호임
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   servlet:
     multipart:
       enabled: true # 파일 업로드 활성화
@@ -48,7 +65,7 @@ spring:
     hibernate:
       # create: 애플리케이션 시작시 테이블을 새로 생성
       # 기존 데이터는 모두 삭제됨 (개발용)
-      ddl-auto: create
+      ddl-auto: update
     # SQL 쿼리를 콘솔에 출력 (개발용 디버깅)
 #    show-sql: true
     properties:
@@ -74,3 +91,7 @@ oauth:
 
 tenco:
   key: ${TENCO_KEY}
+
+portone:
+  imp-key: ${IMP_REST_API_KEY}
+  imp-secret: ${IMP_SECRET_KEY}

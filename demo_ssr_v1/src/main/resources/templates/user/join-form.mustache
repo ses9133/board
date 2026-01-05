@@ -2,17 +2,13 @@
 
 <div class="container p-5">
 
-    <!-- 요청을 하면 localhost:8080/join POST로 요청됨
-    username=사용자입력값&password=사용자값&email=사용자입력값 -->
-
     <!--
-     파일 업로드를 위한 form 태그 설정
-     enctype="multipart/form-data": 파일 형식을 포함한 MIME 타입을 의미한다.
-     즉, 이 속성없이는 파일이 서버로 전송되지 않는다.
-     일반 텍스트 데이터는  application/x-www-form-urlencoded
-     파일 데이터는 multipart/form-data 필요하다. 즉 application/x-www-form-urlencoded -> multipart/form-data 로 바꿔야함
-     -->
-
+        파일 업로드를 위한 form 태그 설정
+        enctype="multipart/form-data : 파일 형식을 포함한 MIME 타입을 의미한다
+        즉, 이 속성 없이는 파일이 서버로 전송되지 않는다 !!!
+        일반 텍스트 데이터는 - application/x-www-form-urlencoded
+        파일 데이터는 - multipart/form-data 필요 하다.
+    -->
     <div class="card">
         <div class="card-header"><b>회원가입을 해주세요</b></div>
         <div class="card-body">
@@ -25,51 +21,49 @@
                 </div>
                 <!-- 이메일 입력 및 인증번호 발송 -->
                 <div class="mb-3">
-                    <div class="input-group">
+                    <div class="input-group" >
                         <input type="email" class="form-control" placeholder="Enter email" id="email" name="email" required>
-                        <button type="button" class="btn btn-outline-secondary" onclick="callSendApi()">인증번호 전송</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="callSendApi()" >인증번호전송</button>
                     </div>
                 </div>
-                <!-- 인증번호 입력(처음에는 숨김) -->
-                <div class="mb-3" id="code-box" style="display: none;">
+                <!-- 인증번호 입력 (처음에는 숨김) -->
+                <div class="mb-3" id="code-box" style="display: none">
                     <label for="">인증번호</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="code" placeholder="인증번호 6자리" maxlength="6">
-                        <button type="button" class="btn btn-outline-secondary" onclick="callVerifyApi()">확인</button>
+                        <input type="text" id="code" class="form-control" placeholder="인증번호 6자리" maxlength="6">
+                        <button type="button" class="btn btn-outline-secondary" onclick="callVerifyApi()" >확인</button>
                     </div>
-                    <!-- 인증 결과 메세지 표시 영역 -->
-                    <div class="form-text" id="msg"></div>
+                    <!--   인증 결과 메세지 표시 영역 -->
+                    <div id="msg" class="form-text"></div>
                 </div>
 
-                <!-- 인증완료 여부 저장 (사용자에겐 안보이게 - hidden) -->
-                <input id="isEmailVerified" value="false" type="hidden">
+                <!--    인증 완료 여부 저장 (hidden 필드)    -->
+                <input type="hidden" id="isEmailVerified" value="false">
 
                 <div class="mb-3">
                     <label for="profileImage" class="form-label">프로필 사진(선택사항)</label>
                     <input type="file" class="form-control" id="profileImage" name="profileImage" accept="image/*">
-                    <small class="form-text text-muted mt-1">이미지 파일만 업로드 가능합니다. (JPG, PNG, GIF)</small>
+                    <small class="form-text text-muted mt-1">이미지 파일만 업로드 가능합니다(JPG, PNG, GIF)</small>
                 </div>
                 <button type="submit" class="btn btn-primary form-control">회원가입</button>
             </form>
         </div>
     </div>
 </div>
-
 <script>
     // 이메일 전송 API 호출 (AJAX)
     async function callSendApi() {
-        // DOM element에 있는 value 값을 가져와야함. 사용자가 입력한 이메일 주소를
-        //  document.querySelector("#email"): 요소 반환
-         // document.querySelector("#email").value: DOM 프로퍼티(value) 반환
+        // DOM 엘리먼트에 있는 value 값을 가져와 한다(사용자가 입력한 이메일 주소를)
+        // 값이 담긴 상태
         let email = document.querySelector("#email").value;
+
         if(!email) {
             alert("이메일을 입력해주세요");
             return;
         }
-
-        // JS 에서 통신하는 코드는 기본적으로 try catch 무조건 작성
+        // js 에서 통신하는 코드는 기본적으로 try catch 무조건 걸어 주세요
         try {
-            // fetch API로 POST 요청 해보기
+            // fetch API 로  POST 요청 해보기
             let response = await fetch("/api/email/send", {
                 method: "POST",
                 headers: {
@@ -80,23 +74,24 @@
 
             // 응답 처리
             if(response.ok) {
-               // response.ok: Http 상태코드 200 ~ 299 범위를 의미
-               alert("인증번호가 메일로 전송되었습니다. 메일을 확인해주세요");
-               document.querySelector("#code-box").style.display = "block";
+                // response.ok HTTP 상태 코드 200 ~ 299 범위를 의미 함
+                alert("인증번호가 메일로 전송 되었습니다. 메일을 확인해주세요");
+                document.querySelector("#code-box").style.display = "block";
             } else {
                 // 서버에서 에러 응답 (400, 500)
-                let error = response.json(); // 문자열 -> js 객체로 변환
+                let error = response.json(); // "문자열" --> js object 로 변환 됨.
                 alert("이메일 전송 실패");
             }
+
         } catch (e) {
-            // 네트워크오류처리
-            alert("서버 통신 오류" + e.message);
+            // 네트워크 오류 처리
+            alert("서버 통신 오류 " + e.message);
         }
     }
 
-    // 인증번호 확인 API 호출(AJAX)
+    // 인증 번호 확인 API 호출 (AJAX)
     async function callVerifyApi() {
-        // 이메일 인증 번호 확인시에는 반드시 이메일과 인증번호 동시 비교해야함
+        // 이메일 인증번호 확인시에는 반드시 이메일과,인증번호 동시 비교
         let email = document.querySelector("#email").value;
         let code = document.querySelector("#code").value;
 
@@ -106,26 +101,28 @@
         }
 
         try {
-            // fetch API로 요청
+            // fetch API POST 요청
             let response = await fetch("/api/email/verify", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({email: email, code: code})
+                body: JSON.stringify({email:email, code: code})
             });
 
             let result = await response.json();
+            //  <div id="msg" class="form-text"></div>
             let msgBox = document.querySelector("#msg");
 
             if(response.ok) {
-                msgBox.innerHTML = '<span style="color: green">인증되었습니다.</span>';
-                // dom 접근해서 false --> true 변경
+                // 인증 성공
+                msgBox.innerHTML = "<span style='color: green' >인증되었습니다</span>"
+                // dom 접근해서 false --> true 변경 처리
                 document.querySelector("#isEmailVerified").value = true;
-                // 이메일 수정 불가능 처리
+                // 이메일 수정 불가 처리
                 document.querySelector("#email").readOnly = true;
             } else {
-                msgBox.innerHTML = '<span style="color: red">인증번호가 일치하지 않습니다.</span>';
+                msgBox.innerHTML = "<span style='color: red' >인증번호가 틀렸습니다</span>"
                 document.querySelector("#isEmailVerified").value = false;
             }
         } catch (e) {
@@ -133,5 +130,8 @@
             alert("네트워크 오류 발생");
         }
     }
+
+
 </script>
+
 {{> layout/footer}}
