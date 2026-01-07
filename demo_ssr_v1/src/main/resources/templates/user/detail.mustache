@@ -39,7 +39,7 @@
             <p class="form-control-plaintext">{{user.email}}</p>
         </div>
         <div class="mb-3">
-            <label for="" class="form-label fw-bold">가입일</label>
+            <label for="" class="form-label fw-bold">가입일 </label>
             <p class="form-control-plaintext">{{user.createdAt}}</p>
         </div>
         <div class="mb-3">
@@ -51,6 +51,8 @@
     </div>
         <div class="d-grid gap-2 mb-3">
             <a href="/user/point/charge" class="btn btn-success">포인트 충전</a>
+            <a href="/user/payment/list" class="btn btn-warning">결제 내역</a>
+            <a href="/user/purchase/list" class="btn btn-info">유료 게시글 구매 내역</a>
             {{#user.isLocal}}
             <a href="/user/update" class="btn btn-primary">회원정보 수정 화면</a>
             {{/user.isLocal}}
