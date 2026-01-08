@@ -21,4 +21,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     boolean existsByMerchantUid(@Param("merchantUid") String merchantUid);
 
     List<Payment> findByUserId(Long userId);
+
+    @Query("SELECT p FROM Payment p JOIN FETCH p.user WHERE p.id = :paymentId")
+    Payment findByIdWithUser(@Param("paymentId") Long paymentId);
 }

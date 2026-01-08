@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.demo_ssr_v1._core.errors.exception.Exception400;
 import org.example.demo_ssr_v1._core.errors.exception.Exception404;
 import org.example.demo_ssr_v1.refund.RefundRequest;
+import org.example.demo_ssr_v1.refund.RefundRequestRepository;
 import org.example.demo_ssr_v1.user.User;
 import org.example.demo_ssr_v1.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;

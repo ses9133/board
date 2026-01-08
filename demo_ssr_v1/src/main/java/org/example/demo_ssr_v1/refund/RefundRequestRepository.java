@@ -1,6 +1,5 @@
-package org.example.demo_ssr_v1.payment;
+package org.example.demo_ssr_v1.refund;
 
-import org.example.demo_ssr_v1.refund.RefundRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
