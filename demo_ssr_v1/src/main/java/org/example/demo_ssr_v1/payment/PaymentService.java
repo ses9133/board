@@ -30,7 +30,6 @@ public class PaymentService {
     @Value("${portone.imp-secret}")
     private String impSecret;
 
-
     // 1. 사전 결제 요청
     // 프론트엔트가 결제창을 띄우기 전에, 서버에서 먼저 고유한 '주문번호(merchantUid) 를
     // 생성해서 내려 주기 위힘 (중복 결제 방지, 금액 위변조 방지)

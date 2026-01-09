@@ -32,7 +32,7 @@ public class RefundController {
     }
 
     @PostMapping("/refund/request")
-    @ResponseBody
+//    @ResponseBody
     public String refundRequest(RefundRequestDTO.RequestDTO reqDTO, HttpSession session) {
         User sessionUser = (User) session.getAttribute("sessionUser");
         if(sessionUser == null) {

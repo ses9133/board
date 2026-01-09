@@ -21,4 +21,10 @@ public interface RefundRequestRepository extends JpaRepository<RefundRequest, Lo
 
     // 결제 ID로 환불 요청 조회 여부 확인
     Optional<RefundRequest> findByPaymentId(Long paymentId);
+
+    @Query("SELECT r FROM RefundRequest r JOIN FETCH r.payment p JOIN FETCH r.user u ORDER BY r.createdAt DESC")
+    List<RefundRequest> findAllWithUserAndPayment();
+
+    @Query("SELECT r FROM RefundRequest r JOIN FETCH r.payment p JOIN FETCH r.user u WHERE r.id = :refundRequestId")
+    Optional<RefundRequest> findByIdWithUserAndPayment(Long refundRequestId);
 }

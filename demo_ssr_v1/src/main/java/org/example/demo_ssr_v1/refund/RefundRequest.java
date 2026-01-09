@@ -49,6 +49,7 @@ public class RefundRequest { // 환불 요청 테이블
 
     // 생성 시간
     @CreationTimestamp
+    @Column(nullable = false)
     private Timestamp createdAt;
 
     // 수정 시간
